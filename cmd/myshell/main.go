@@ -14,10 +14,16 @@ func main() {
 		reader := userInput()
 		commad := extractCommand(reader)
 
-		if strings.HasPrefix(commad, "exit") {
+		switch {
+		case strings.HasPrefix(commad, "exit"):
 			os.Exit(0)
+		case strings.HasPrefix(commad, "echo"):
+			echoText := strings.TrimSpace(strings.Split(commad, "echo")[1])
+			fmt.Println(echoText)
+		default:
+			commandNotFound(commad)
 		}
-		commandNotFound(commad)
+
 	}
 }
 
