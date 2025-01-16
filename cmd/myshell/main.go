@@ -27,12 +27,32 @@ func main() {
 			if slices.Contains(listOfCommands, typeText) {
 				fmt.Printf("%s is a shell builtin\n", typeText)
 			} else {
-				fmt.Printf("%s: not found\n", typeText)
+				path, isFound := findAllExcutableCmd(typeText)
+				if isFound {
+					fmt.Printf("%s is %s\n", typeText, path)
+				} else {
+					fmt.Printf("%s: not found\n", typeText)
+				}
 			}
 		default:
 			commandNotFound(commad)
 		}
 	}
+}
+
+func findAllExcutableCmd(typeText string) (string, bool) {
+	paths := os.Getenv("PATH")
+	pathsList := strings.Split(paths, ":")
+	for _, path := range pathsList {
+		dirs, _ := os.ReadDir(path)
+		for _, dir := range dirs {
+			if dir.Name() == typeText {
+				str := path + "/" + dir.Name()
+				return str, true
+			}
+		}
+	}
+	return "", false
 }
 
 func userInput() string {
