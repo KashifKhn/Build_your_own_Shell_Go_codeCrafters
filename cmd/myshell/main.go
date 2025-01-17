@@ -20,18 +20,19 @@ func main() {
 		case strings.HasPrefix(cmd, "exit"):
 			os.Exit(0)
 		case strings.HasPrefix(cmd, "echo"):
-			echoText := strings.TrimSpace(strings.Split(cmd, "echo")[1])
-			fmt.Println(echoText)
+			args := strings.Fields(cmd)
+			echoStr := strings.Join(args[1:], " ")
+			fmt.Println(echoStr)
 		case strings.HasPrefix(cmd, "type "):
-			typeText := strings.TrimSpace(strings.Split(cmd, "type ")[1])
-			if slices.Contains(listOfCmd, typeText) {
-				fmt.Printf("%s is a shell builtin\n", typeText)
+			args := strings.Fields(cmd)[1]
+			if slices.Contains(listOfCmd, args) {
+				fmt.Printf("%s is a shell builtin\n", args)
 			} else {
-				path, isFound := findAllExcutableCmd(typeText)
+				path, isFound := findAllExcutableCmd(args)
 				if isFound {
-					fmt.Printf("%s is %s\n", typeText, path)
+					fmt.Printf("%s is %s\n", args, path)
 				} else {
-					fmt.Printf("%s: not found\n", typeText)
+					fmt.Printf("%s: not found\n", args)
 				}
 			}
 		default:
