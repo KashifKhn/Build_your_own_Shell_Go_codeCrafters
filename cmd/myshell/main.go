@@ -40,13 +40,13 @@ func main() {
 	}
 }
 
-func findAllExcutableCmd(typeText string) (string, bool) {
+func findAllExcutableCmd(args string) (string, bool) {
 	paths := os.Getenv("PATH")
 	pathsList := strings.Split(paths, ":")
 	for _, path := range pathsList {
 		dirs, _ := os.ReadDir(path)
 		for _, dir := range dirs {
-			if dir.Name() == typeText {
+			if dir.Name() == args {
 				str := path + "/" + dir.Name()
 				return str, true
 			}
