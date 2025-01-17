@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"slices"
+	"path/filepath"
 	"strings"
 )
 
@@ -13,42 +13,53 @@ func main() {
 	for {
 		fmt.Fprint(os.Stdout, "$ ")
 		reader := userInput()
-		commad := extractCommand(reader)
-		listOfCommands := []string{"exit", "echo", "type"}
+		cmd := extractCommand(reader)
+		listOfCmds := map[string]bool{"exit": true, "echo": true, "type": true}
 
 		switch {
-		case strings.HasPrefix(commad, "exit"):
+		case strings.HasPrefix(cmd, "exit"):
 			os.Exit(0)
-		case strings.HasPrefix(commad, "echo"):
-			echoText := strings.TrimSpace(strings.Split(commad, "echo")[1])
-			fmt.Println(echoText)
-		case strings.HasPrefix(commad, "type "):
-			typeText := strings.TrimSpace(strings.Split(commad, "type ")[1])
-			if slices.Contains(listOfCommands, typeText) {
-				fmt.Printf("%s is a shell builtin\n", typeText)
+		case strings.HasPrefix(cmd, "echo"):
+			args := strings.Fields(cmd)
+			echoStr := strings.Join(args[1:], " ")
+			fmt.Println(echoStr)
+		case strings.HasPrefix(cmd, "type"):
+			args := strings.Fields(cmd)
+			if len(args) < 2 {
+				fmt.Println("type: missing argument")
+				continue
+			}
+			cmdName := args[1]
+			if listOfCmds[cmdName] {
+				fmt.Printf("%s is a shell builtin\n", cmdName)
 			} else {
-				path, isFound := findAllExcutableCmd(typeText)
+				path, isFound := findAllExcutableCmd(cmdName)
 				if isFound {
-					fmt.Printf("%s is %s\n", typeText, path)
+					fmt.Printf("%s is %s\n", cmdName, path)
 				} else {
-					fmt.Printf("%s: not found\n", typeText)
+					fmt.Printf("%s: not found\n", cmdName)
 				}
 			}
 		default:
-			commandNotFound(commad)
+			commandNotFound(cmd)
 		}
 	}
 }
 
 func findAllExcutableCmd(args string) (string, bool) {
 	paths := os.Getenv("PATH")
+	if paths == "" {
+		return "", false
+	}
 	pathsList := strings.Split(paths, ":")
 	for _, path := range pathsList {
-		dirs, _ := os.ReadDir(path)
+		dirs, err := os.ReadDir(path)
+		if err != nil {
+			continue
+		}
 		for _, dir := range dirs {
 			if dir.Name() == args {
-				str := path + "/" + dir.Name()
-				return str, true
+				return filepath.Join(path, dir.Name()), true
 			}
 		}
 	}
@@ -61,13 +72,13 @@ func userInput() string {
 		fmt.Println("Error reading from stdin")
 		os.Exit(1)
 	}
-	return reader
+	return strings.TrimSpace(reader)
 }
 
-func commandNotFound(command string) {
-	fmt.Printf("%s: command not found\n", command)
+func commandNotFound(cmd string) {
+	fmt.Printf("%s: command not found\n", cmd)
 }
 
 func extractCommand(reader string) string {
-	return strings.Split(strings.ToLower(strings.TrimSpace(reader)), "\n")[0]
+	return strings.Split(strings.TrimSpace(reader), "\n")[0]
 }
