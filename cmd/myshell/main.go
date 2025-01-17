@@ -13,18 +13,18 @@ func main() {
 	for {
 		fmt.Fprint(os.Stdout, "$ ")
 		reader := userInput()
-		commad := extractCommand(reader)
-		listOfCommands := []string{"exit", "echo", "type"}
+		cmd := extractCommand(reader)
+		listOfCmd := []string{"exit", "echo", "type"}
 
 		switch {
-		case strings.HasPrefix(commad, "exit"):
+		case strings.HasPrefix(cmd, "exit"):
 			os.Exit(0)
-		case strings.HasPrefix(commad, "echo"):
-			echoText := strings.TrimSpace(strings.Split(commad, "echo")[1])
+		case strings.HasPrefix(cmd, "echo"):
+			echoText := strings.TrimSpace(strings.Split(cmd, "echo")[1])
 			fmt.Println(echoText)
-		case strings.HasPrefix(commad, "type "):
-			typeText := strings.TrimSpace(strings.Split(commad, "type ")[1])
-			if slices.Contains(listOfCommands, typeText) {
+		case strings.HasPrefix(cmd, "type "):
+			typeText := strings.TrimSpace(strings.Split(cmd, "type ")[1])
+			if slices.Contains(listOfCmd, typeText) {
 				fmt.Printf("%s is a shell builtin\n", typeText)
 			} else {
 				path, isFound := findAllExcutableCmd(typeText)
@@ -35,18 +35,21 @@ func main() {
 				}
 			}
 		default:
-			commandNotFound(commad)
+			commandNotFound(cmd)
 		}
 	}
 }
 
-func findAllExcutableCmd(typeText string) (string, bool) {
+func findAllExcutableCmd(args string) (string, bool) {
 	paths := os.Getenv("PATH")
 	pathsList := strings.Split(paths, ":")
 	for _, path := range pathsList {
-		dirs, _ := os.ReadDir(path)
+		dirs, err := os.ReadDir(path)
+		if err != nil {
+			continue
+		}
 		for _, dir := range dirs {
-			if dir.Name() == typeText {
+			if dir.Name() == args {
 				str := path + "/" + dir.Name()
 				return str, true
 			}
@@ -64,10 +67,10 @@ func userInput() string {
 	return reader
 }
 
-func commandNotFound(command string) {
-	fmt.Printf("%s: command not found\n", command)
+func commandNotFound(cmd string) {
+	fmt.Printf("%s: command not found\n", cmd)
 }
 
 func extractCommand(reader string) string {
-	return strings.Split(strings.ToLower(strings.TrimSpace(reader)), "\n")[0]
+	return strings.Split(strings.TrimSpace(reader), "\n")[0]
 }
