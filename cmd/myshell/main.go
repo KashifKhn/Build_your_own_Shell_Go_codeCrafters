@@ -15,7 +15,7 @@ func main() {
 		fmt.Fprint(os.Stdout, "$ ")
 		reader := userInput()
 		cmd := extractCommand(reader)
-		listOfCmds := map[string]bool{"exit": true, "echo": true, "type": true, "pwd": true}
+		listOfCmds := map[string]bool{"exit": true, "echo": true, "type": true, "pwd": true, "cd": true}
 
 		switch {
 		case strings.HasPrefix(cmd, "exit"):
@@ -24,6 +24,8 @@ func main() {
 			echo(cmd)
 		case strings.HasPrefix(cmd, "pwd"):
 			pwd()
+		case strings.HasPrefix(cmd, "cd"):
+			cd(cmd)
 		case strings.HasPrefix(cmd, "type"):
 			args := strings.Fields(cmd)
 			if len(args) < 2 {
@@ -43,6 +45,53 @@ func main() {
 			}
 		}
 	}
+}
+
+func cd(cmd string) {
+	cmdFields := strings.Fields(cmd)
+	cmdExec := cmdFields[0]
+	path := cmdFields[1]
+	if isRelativePath(path) {
+		if path == ".." {
+			err := os.Chdir("..")
+			if err != nil {
+				fmt.Printf("%s: %s: No such file or directory\n", cmdExec, path)
+			}
+		} else {
+			curDir, err := os.Getwd()
+			if err != nil {
+				fmt.Println("Error:", err)
+			}
+			newPath := filepath.Join(curDir, path)
+			err = os.Chdir(newPath)
+			if err != nil {
+				fmt.Printf("%s: %s: No such file or directory\n", cmdExec, path)
+			}
+		}
+	} else if isAbsolute(path) {
+		err := os.Chdir(path)
+		if err != nil {
+			fmt.Printf("%s: %s: No such file or directory\n", cmdExec, path)
+		}
+	} else {
+		homeDir, err := os.UserHomeDir()
+		if err != nil {
+			fmt.Printf("%s: %s: No such file or directory\n", cmdExec, path)
+		}
+		err = os.Chdir(homeDir)
+		if err != nil {
+			fmt.Printf("%s: %s: No such file or directory\n", cmdExec, path)
+		}
+
+	}
+}
+
+func isAbsolute(path string) bool {
+	return strings.HasPrefix(path, "/")
+}
+
+func isRelativePath(path string) bool {
+	return strings.HasPrefix(path, ".") || strings.HasPrefix(path, "..")
 }
 
 func typeCmd(args []string, listOfCmds map[string]bool) {
