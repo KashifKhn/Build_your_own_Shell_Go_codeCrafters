@@ -51,10 +51,33 @@ func cd(cmd string) {
 	cmdFields := strings.Fields(cmd)
 	cmdExec := cmdFields[0]
 	path := cmdFields[1]
-	err := os.Chdir(path)
-	if err != nil {
-		fmt.Printf("%s: %s: No such file or directory\n", cmdExec, path)
+	if isRelativePath(path) {
+		if path == ".." {
+			err := os.Chdir("..")
+			if err != nil {
+				fmt.Printf("%s: %s: No such file or directory\n", cmdExec, path)
+			}
+		} else {
+			curDir, err := os.Getwd()
+			if err != nil {
+				fmt.Println("Error:", err)
+			}
+			newPath := filepath.Join(curDir, path)
+			err = os.Chdir(newPath)
+			if err != nil {
+				fmt.Printf("%s: %s: No such file or directory\n", cmdExec, path)
+			}
+		}
+	} else {
+		err := os.Chdir(path)
+		if err != nil {
+			fmt.Printf("%s: %s: No such file or directory\n", cmdExec, path)
+		}
 	}
+}
+
+func isRelativePath(path string) bool {
+	return strings.HasPrefix(path, ".") || strings.HasPrefix(path, "..")
 }
 
 func typeCmd(args []string, listOfCmds map[string]bool) {
