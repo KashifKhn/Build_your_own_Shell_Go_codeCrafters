@@ -15,7 +15,7 @@ func main() {
 		fmt.Fprint(os.Stdout, "$ ")
 		reader := userInput()
 		cmd := extractCommand(reader)
-		listOfCmds := map[string]bool{"exit": true, "echo": true, "type": true, "pwd": true}
+		listOfCmds := map[string]bool{"exit": true, "echo": true, "type": true, "pwd": true, "cd": true}
 
 		switch {
 		case strings.HasPrefix(cmd, "exit"):
@@ -24,6 +24,8 @@ func main() {
 			echo(cmd)
 		case strings.HasPrefix(cmd, "pwd"):
 			pwd()
+		case strings.HasPrefix(cmd, "cd"):
+			cd(cmd)
 		case strings.HasPrefix(cmd, "type"):
 			args := strings.Fields(cmd)
 			if len(args) < 2 {
@@ -42,6 +44,16 @@ func main() {
 				commandNotFound(cmd)
 			}
 		}
+	}
+}
+
+func cd(cmd string) {
+	cmdFields := strings.Fields(cmd)
+	cmdExec := cmdFields[0]
+	path := cmdFields[1]
+	err := os.Chdir(path)
+	if err != nil {
+		fmt.Printf("%s: %s: No such file or directory\n", cmdExec, path)
 	}
 }
 
