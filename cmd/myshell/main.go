@@ -15,32 +15,22 @@ func main() {
 		fmt.Fprint(os.Stdout, "$ ")
 		reader := userInput()
 		cmd := extractCommand(reader)
-		listOfCmds := map[string]bool{"exit": true, "echo": true, "type": true}
+		listOfCmds := map[string]bool{"exit": true, "echo": true, "type": true, "pwd": true}
 
 		switch {
 		case strings.HasPrefix(cmd, "exit"):
 			os.Exit(0)
 		case strings.HasPrefix(cmd, "echo"):
-			args := strings.Fields(cmd)
-			echoStr := strings.Join(args[1:], " ")
-			fmt.Println(echoStr)
+			echo(cmd)
+		case strings.HasPrefix(cmd, "pwd"):
+			pwd()
 		case strings.HasPrefix(cmd, "type"):
 			args := strings.Fields(cmd)
 			if len(args) < 2 {
 				fmt.Println("type: missing argument")
 				continue
 			}
-			cmdName := args[1]
-			if listOfCmds[cmdName] {
-				fmt.Printf("%s is a shell builtin\n", cmdName)
-			} else {
-				path, isFound := findAllExcutableCmd(cmdName)
-				if isFound {
-					fmt.Printf("%s is %s\n", cmdName, path)
-				} else {
-					fmt.Printf("%s: not found\n", cmdName)
-				}
-			}
+			typeCmd(args, listOfCmds)
 		default:
 			cmdFields := strings.Fields(cmd)
 			cmdExec := cmdFields[0]
@@ -53,6 +43,34 @@ func main() {
 			}
 		}
 	}
+}
+
+func typeCmd(args []string, listOfCmds map[string]bool) {
+	cmdName := args[1]
+	if listOfCmds[cmdName] {
+		fmt.Printf("%s is a shell builtin\n", cmdName)
+	} else {
+		path, isFound := findAllExcutableCmd(cmdName)
+		if isFound {
+			fmt.Printf("%s is %s\n", cmdName, path)
+		} else {
+			fmt.Printf("%s: not found\n", cmdName)
+		}
+	}
+}
+
+func pwd() {
+	dir, err := os.Getwd()
+	if err != nil {
+		fmt.Println("Error:", err)
+	}
+	fmt.Println(dir)
+}
+
+func echo(cmd string) {
+	args := strings.Fields(cmd)
+	echoStr := strings.Join(args[1:], " ")
+	fmt.Println(echoStr)
 }
 
 func excuteCmd(cmd string, args []string) {
