@@ -68,12 +68,26 @@ func cd(cmd string) {
 				fmt.Printf("%s: %s: No such file or directory\n", cmdExec, path)
 			}
 		}
-	} else {
+	} else if isAbsolute(path) {
 		err := os.Chdir(path)
 		if err != nil {
 			fmt.Printf("%s: %s: No such file or directory\n", cmdExec, path)
 		}
+	} else {
+		homeDir, err := os.UserHomeDir()
+		if err != nil {
+			fmt.Printf("%s: %s: No such file or directory\n", cmdExec, path)
+		}
+		err = os.Chdir(homeDir)
+		if err != nil {
+			fmt.Printf("%s: %s: No such file or directory\n", cmdExec, path)
+		}
+
 	}
+}
+
+func isAbsolute(path string) bool {
+	return strings.HasPrefix(path, "/")
 }
 
 func isRelativePath(path string) bool {
